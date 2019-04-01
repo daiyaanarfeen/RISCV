@@ -1,0 +1,243 @@
+#include <stdio.h> // for stderr
+#include <stdlib.h> // for exit()
+#include "types.h"
+#include "utils.h"
+
+void print_rtype(char *, Instruction);
+void print_itype_except_load(char *, Instruction, int);
+void print_load(char *, Instruction);
+void print_store(char *, Instruction);
+void print_branch(char *, Instruction);
+void write_rtype(Instruction);
+void write_itype_except_load(Instruction); 
+void write_load(Instruction);
+void write_store(Instruction);
+void write_branch(Instruction);
+void write_lui(Instruction);
+void write_jal(Instruction);
+void write_ecall(Instruction);
+
+
+void decode_instruction(Instruction instruction) {
+    /* YOUR CODE HERE: COMPLETE THE SWITCH STATEMENTS */
+    unsigned int opcode = Instruction.opcode;
+    switch(opcode) { // What do we switch on?
+        case 3:
+            write_load(instruction);
+            break;
+
+        case 19:
+            write_itype_except_load(instruction);
+            break;
+
+        case 55:
+            write_lui(instruction);
+            break;
+
+        case 111:
+            write_jal(instruction);
+            break;
+
+        case 35:
+            write_store(instruction);
+            break;
+
+        case 99:
+            write_branch(instruction);
+            break;
+
+        case 115:
+            write_ecall(instruction);
+
+    	default: // undefined opcode
+            handle_invalid_instruction(instruction);
+    	    break;
+    }
+}
+
+void write_rtype(Instruction instruction) {
+    char *name;
+	switch(instruction.rtype.funct3) { // What do we switch on?
+        /* YOUR CODE HERE */
+        case 0x0:
+            switch(instruction.rtype.funct7) {
+                case 0x00:
+                    name = "add";
+                case 0x01:
+                    name = "mul";
+                case 0x20:
+                    name = "sub";
+            }
+        case 0x1:
+            if (instruction.rtype.funct7 == 0x00) {
+                name = "sll";
+            } else {
+                name = "mulh";
+            }
+        case 0x2: 
+            name = "slt";
+        case 0x4:
+            if (instruction.rtype.funct7 == 0x00) {
+                name = "xor";
+            } else {
+                name = "div";
+            }
+        case 0x5:
+            if (instruction.rtype.funct7 == 0x00) {
+                name = "srl";
+            } else {
+                name = "sra";
+            }
+        case 0x6:
+            if (instruction.rtype.funct7 == 0x00) {
+                name = "or";
+            } else {
+                name = "rem";
+            }
+        case 0x7:
+            name = "and";
+	    default:
+            handle_invalid_instruction(instruction);
+            break;
+    }
+    print_rtype(name, instruction);
+}
+
+void write_itype_except_load(Instruction instruction) {
+    char *name;
+    int shiftOp;
+    shiftOp = -1;
+    switch(instruction.itype.funct3) { // What do we switch on?
+        /* YOUR CODE HERE */
+        case 0x0:
+            name = "addi";
+        case 0x1:
+            name = "slli";
+        case 0x2:
+            name = "slti";
+        case 0x4:
+            name = "xori";
+        case 0x5:
+            if (instruction.itype.funct7 == 0x00) {
+                name = "srli";
+            } else {
+                name = "srai";
+            }
+        case 0x6:
+            name = "ori";
+        case 0x7:
+            name = "andi";
+        default:
+            handle_invalid_instruction(instruction);
+            break;  
+    }
+    print_itype_except_load(name, instruction, bitSigner(instruction.itype.imm, 12));
+}
+
+void write_load(Instruction instruction) {
+    char *name;
+    switch(instruction.itype.funct3) { // What do we switch on?
+        /* YOUR CODE HERE */
+        case 0x0:
+            name = "lb";
+        case 0x1:
+            name = "lh";
+        case 0x2:
+            name = "lw";
+        default:
+            handle_invalid_instruction(instruction);
+            break;
+    }
+    print_load(name, instruction);
+}
+
+void write_store(Instruction instruction) {
+    char *name;
+    switch(instruction.stype.funct3) { // What do we switch on?
+        /* YOUR CODE HERE */
+        case 0x0:
+            name = "sb";
+        case 0x1:
+            name = "sh";
+        case 0x2:
+            name = "sw";
+        default:
+            handle_invalid_instruction(instruction);
+            break;
+    }
+    print_store(name, instruction);
+}
+
+void write_branch(Instruction instruction) {
+    char *name;
+    switch(instruction.sbtype.funct3) { // What do we switch on?
+        /* YOUR CODE HERE */
+        case 0x0:
+            name = "beq";
+        case 0x1:
+            name = "bne";
+        default:
+            handle_invalid_instruction(instruction);
+            break;
+    }
+    print_branch(name, instruction);
+}
+
+/* For the writes, probably a good idea to take a look at utils.h */
+
+void write_lui(Instruction instruction) {
+    /* YOUR CODE HERE */
+}
+
+void write_jal(Instruction instruction) {
+    /* YOUR CODE HERE */
+}
+
+void write_ecall(Instruction instruction) {
+    /* YOUR CODE HERE */
+}
+
+void print_rtype(char *name, Instruction instruction) {
+    /* YOUR CODE HERE */
+    unsigned int rd = instruction.rtype.rd;
+    unsigned int rs1 = instruction.rtype.rs1;
+    unsigned int rs2 = instruction.rtype.rs2;
+    print(RTYPE_FORMAT, name, rd, rs1, rs2);
+}
+
+void print_itype_except_load(char *name, Instruction instruction, int imm) {
+    /* YOUR CODE HERE */
+    unsigned int rd = instruction.itype.rd;
+    unsigned int rs1 = instruction.itype.rs1;
+    print(MEM_FORMAT, name, rd, rs1, imm);
+}
+
+void print_load(char *name, Instruction instruction) {
+    /* YOUR CODE HERE */
+    unsigned int rd = instruction.itype.rd;
+    unsigned int rs1 = instruction.itype.rs1;
+    int imm = instruction.itype.imm;
+    print(ITYPE_FORMAT, name, rd, imm, rs1);
+}
+
+void print_store(char *name, Instruction instruction) {
+    /* YOUR CODE HERE */
+    unsigned int rs1 = instruction.stype.rs1;
+    unsigned int rs2 = instruction.stype.rs2;
+    int imm5 = instructions.stype.imm5;
+    int imm7 = instruction.stype.imm7;
+    imm7 = imm7 << 5;
+    int imm = imm5 + imm7;
+    print(MEM_FORMAT, name, rs2, imm, rs1);
+}
+
+void print_branch(char *name, Instruction instruction) {
+    /* YOUR CODE HERE */
+    unsigned int rs1 = instruction.sbtype.rs1;
+    unsigned int rs2 = instruction.sbtype.rs2;
+    int imm5 = instructions.sbtype.imm5;
+    int imm7 = instruction.sbtype.imm7;
+    imm7 = imm7 << 5;
+    int imm = imm5 + imm7;
+    print(BRANCH_FORMAT, name, rs1, rs2, imm);
+}
